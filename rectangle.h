@@ -1,4 +1,4 @@
-/*
-** ‹éŒ`‚Ì•`‰æ
+ï»¿/*
+** çŸ©å½¢ã®æç”»
 */
 extern void rectangle(double w, double h);

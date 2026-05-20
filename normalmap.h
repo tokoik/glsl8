@@ -1,4 +1,4 @@
-/*
-** –@üƒ}ƒbƒv‚Ìì¬
+ï»¿/*
+** æ³•ç·šãƒãƒƒãƒ—ã®ä½œæˆ
 */
 extern void makeNormalMap(GLubyte *tex, int width, int height, double max, const char *name);

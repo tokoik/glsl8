@@ -1,4 +1,4 @@
-#include <stdio.h>
+ï»¿#include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
 
@@ -18,104 +18,103 @@ PFNGLACTIVETEXTUREPROC glActiveTexture;
 #include "glsl.h"
 
 /*
-** ƒVƒF[ƒ_ƒIƒuƒWƒFƒNƒg
+** ã‚·ã‚§ãƒ¼ãƒ€ã‚ªãƒ–ã‚¸ã‚§ã‚¯ãƒˆ
 */
 static GLuint vertShader;
 static GLuint fragShader;
 static GLuint gl2Program;
 
 /*
-** ÚƒxƒNƒgƒ‹‚ğŠi”[‚·‚é attribute •Ï”‚Ìƒnƒ“ƒhƒ‹
+** æ¥ãƒ™ã‚¯ãƒˆãƒ«ã‚’æ ¼ç´ã™ã‚‹ attribute å¤‰æ•°ã®ãƒãƒ³ãƒ‰ãƒ«
 */
 GLint tangent;
 
 /*
-** ŒõŒ¹
+** å…‰æº
 */
-static const GLfloat lightpos[] = { 4.0, 5.0, 6.0, 1.0 }; /* ˆÊ’u@@@ */
-static const GLfloat lightcol[] = { 1.0, 1.0, 1.0, 1.0 }; /* ’¼ÚŒõ‹­“x */
-static const GLfloat lightamb[] = { 0.1, 0.1, 0.1, 1.0 }; /* ŠÂ‹«Œõ‹­“x */
+static const GLfloat lightpos[] = { 4.0, 5.0, 6.0, 1.0 }; /* ä½ç½®ã€€ã€€ã€€ */
+static const GLfloat lightcol[] = { 1.0, 1.0, 1.0, 1.0 }; /* ç›´æ¥å…‰å¼·åº¦ */
+static const GLfloat lightamb[] = { 0.1, 0.1, 0.1, 1.0 }; /* ç’°å¢ƒå…‰å¼·åº¦ */
 
 /*
-** ƒeƒNƒXƒ`ƒƒ
+** ãƒ†ã‚¯ã‚¹ãƒãƒ£
 */
-#define TEXWIDTH  256                      /* ƒeƒNƒXƒ`ƒƒ‚Ì•@@@ */
-#define TEXHEIGHT 256                      /* ƒeƒNƒXƒ`ƒƒ‚Ì‚‚³@@ */
+#define TEXWIDTH  256                      /* ãƒ†ã‚¯ã‚¹ãƒãƒ£ã®å¹…ã€€ã€€ã€€ */
+#define TEXHEIGHT 256                      /* ãƒ†ã‚¯ã‚¹ãƒãƒ£ã®é«˜ã•ã€€ã€€ */
 
 /*
-** ‰Šú‰»
+** åˆæœŸåŒ–
 */
 static void init(void)
 {
-  /* –@üƒ}ƒbƒv‚ğŠi”[‚·‚é”z—ñ */
+  /* æ³•ç·šãƒãƒƒãƒ—ã‚’æ ¼ç´ã™ã‚‹é…åˆ— */
   GLubyte texture[TEXHEIGHT * TEXWIDTH * 4];
-  /* ƒVƒF[ƒ_ƒvƒƒOƒ‰ƒ€‚ÌƒRƒ“ƒpƒCƒ‹^ƒŠƒ“ƒNŒ‹‰Ê‚ğ“¾‚é•Ï” */
+  /* ã‚·ã‚§ãƒ¼ãƒ€ãƒ—ãƒ­ã‚°ãƒ©ãƒ ã®ã‚³ãƒ³ãƒ‘ã‚¤ãƒ«ï¼ãƒªãƒ³ã‚¯çµæœã‚’å¾—ã‚‹å¤‰æ•° */
   GLint compiled, linked;
-  /* ƒeƒNƒXƒ`ƒƒƒIƒuƒWƒFƒNƒg */
+  /* ãƒ†ã‚¯ã‚¹ãƒãƒ£ã‚ªãƒ–ã‚¸ã‚§ã‚¯ãƒˆ */
   GLuint texname[1];
-  /* ƒeƒNƒXƒ`ƒƒƒtƒ@ƒCƒ‹‚Ì“Ç‚İ‚İ‚Ég‚¤ƒtƒ@ƒCƒ‹ƒ|ƒCƒ“ƒ^ */
-  FILE *fp;
   
 #if defined(WIN32)
   glActiveTexture =
     (PFNGLACTIVETEXTUREPROC)wglGetProcAddress("glActiveTexture");
 #endif
   
-  /* ƒeƒNƒXƒ`ƒƒ‰æ‘œ‚Íƒ[ƒh’PˆÊ‚É‹l‚ß‚Ü‚ê‚Ä‚¢‚é */
+  /* ãƒ†ã‚¯ã‚¹ãƒãƒ£ç”»åƒã¯ãƒ¯ãƒ¼ãƒ‰å˜ä½ã«è©°ã‚è¾¼ã¾ã‚Œã¦ã„ã‚‹ */
   glPixelStorei(GL_UNPACK_ALIGNMENT, 4);
   
-  /* ƒeƒNƒXƒ`ƒƒ‚ğŠg‘åEk¬‚·‚é•û–@‚Ìw’è */
+  /* ãƒ†ã‚¯ã‚¹ãƒãƒ£ã‚’æ‹¡å¤§ãƒ»ç¸®å°ã™ã‚‹æ–¹æ³•ã®æŒ‡å®š */
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
   
-  /* ƒeƒNƒXƒ`ƒƒ‚ÌŒJ‚è•Ô‚µ•û–@‚Ìw’è */
+  /* ãƒ†ã‚¯ã‚¹ãƒãƒ£ã®ç¹°ã‚Šè¿”ã—æ–¹æ³•ã®æŒ‡å®š */
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
   
-  /* ƒeƒNƒXƒ`ƒƒƒ†ƒjƒbƒg‚O‚ÌƒeƒNƒXƒ`ƒƒŠÂ‹« */
+  /* ãƒ†ã‚¯ã‚¹ãƒãƒ£ãƒ¦ãƒ‹ãƒƒãƒˆï¼ã®ãƒ†ã‚¯ã‚¹ãƒãƒ£ç’°å¢ƒ */
   glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
   
-  /* –@üƒ}ƒbƒv‚Ìì¬ */
+  /* æ³•ç·šãƒãƒƒãƒ—ã®ä½œæˆ */
   makeNormalMap(texture, TEXWIDTH, TEXHEIGHT, 20.0, "dotbump.raw");
   
-  /* ƒeƒNƒXƒ`ƒƒƒ†ƒjƒbƒg‚O‚É–@üƒ}ƒbƒv‚ğŠ„‚è“–‚Ä‚é */
+  /* ãƒ†ã‚¯ã‚¹ãƒãƒ£ãƒ¦ãƒ‹ãƒƒãƒˆï¼ã«æ³•ç·šãƒãƒƒãƒ—ã‚’å‰²ã‚Šå½“ã¦ã‚‹ */
   glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, TEXWIDTH, TEXHEIGHT, 0,
     GL_RGBA, GL_UNSIGNED_BYTE, texture);
   
-  /* ƒeƒNƒXƒ`ƒƒƒ†ƒjƒbƒg‚P—p‚ÌƒeƒNƒXƒ`ƒƒƒIƒuƒWƒFƒNƒg‚ğì¬‚·‚é */
+  /* ãƒ†ã‚¯ã‚¹ãƒãƒ£ãƒ¦ãƒ‹ãƒƒãƒˆï¼‘ç”¨ã®ãƒ†ã‚¯ã‚¹ãƒãƒ£ã‚ªãƒ–ã‚¸ã‚§ã‚¯ãƒˆã‚’ä½œæˆã™ã‚‹ */
   glGenTextures(1, texname);
   
-  /* ƒeƒNƒXƒ`ƒƒƒ†ƒjƒbƒg‚P‚ÉØ‚è‘Ö‚¦‚é */
+  /* ãƒ†ã‚¯ã‚¹ãƒãƒ£ãƒ¦ãƒ‹ãƒƒãƒˆï¼‘ã«åˆ‡ã‚Šæ›¿ãˆã‚‹ */
   glActiveTexture(GL_TEXTURE1);
   glBindTexture(GL_TEXTURE_2D, texname[0]);
   
-  /* ƒeƒNƒXƒ`ƒƒ‚ğŠg‘åEk¬‚·‚é•û–@‚Ìw’è */
+  /* ãƒ†ã‚¯ã‚¹ãƒãƒ£ã‚’æ‹¡å¤§ãƒ»ç¸®å°ã™ã‚‹æ–¹æ³•ã®æŒ‡å®š */
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
   
-  /* ƒeƒNƒXƒ`ƒƒ‚ÌŒJ‚è•Ô‚µ•û–@‚Ìw’è */
+  /* ãƒ†ã‚¯ã‚¹ãƒãƒ£ã®ç¹°ã‚Šè¿”ã—æ–¹æ³•ã®æŒ‡å®š */
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
   
-  /* ƒeƒNƒXƒ`ƒƒ‰æ‘œ‚Ì“Ç‚İ‚İ */
-  if ((fp = fopen("dot.raw", "rb")) != NULL) {
+  /* ãƒ†ã‚¯ã‚¹ãƒãƒ£ç”»åƒã®èª­ã¿è¾¼ã¿ */
+  FILE *fp = fopen("dot.raw", "rb");
+  if (fp != NULL) {
     fread(texture, sizeof texture, 1, fp);
     fclose(fp);
   }
   
-  /* ƒeƒNƒXƒ`ƒƒ‚ÌŠ„‚è“–‚Ä */
+  /* ãƒ†ã‚¯ã‚¹ãƒãƒ£ã®å‰²ã‚Šå½“ã¦ */
   glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, TEXWIDTH, TEXHEIGHT, 0,
     GL_RGBA, GL_UNSIGNED_BYTE, texture);
 
-  /* ƒeƒNƒXƒ`ƒƒƒ†ƒjƒbƒg‚O‚É–ß‚· */
+  /* ãƒ†ã‚¯ã‚¹ãƒãƒ£ãƒ¦ãƒ‹ãƒƒãƒˆï¼ã«æˆ»ã™ */
   glActiveTexture(GL_TEXTURE0);
 
-  /* ‰Šúİ’è */
+  /* åˆæœŸè¨­å®š */
   glClearColor(0.3, 0.3, 1.0, 0.0);
   glEnable(GL_DEPTH_TEST);
   glEnable(GL_CULL_FACE);
 
-  /* ŒõŒ¹‚Ì‰Šúİ’è */
+  /* å…‰æºã®åˆæœŸè¨­å®š */
   glEnable(GL_LIGHTING);
   glEnable(GL_LIGHT0);
   glLightfv(GL_LIGHT0, GL_DIFFUSE, lightcol);
@@ -123,18 +122,18 @@ static void init(void)
   glLightfv(GL_LIGHT0, GL_AMBIENT, lightamb);
   glLightModeli(GL_LIGHT_MODEL_LOCAL_VIEWER, GL_TRUE);
   
-  /* GLSL ‚Ì‰Šú‰» */
+  /* GLSL ã®åˆæœŸåŒ– */
   if (glslInit()) exit(1);
   
-  /* ƒVƒF[ƒ_ƒIƒuƒWƒFƒNƒg‚Ìì¬ */
+  /* ã‚·ã‚§ãƒ¼ãƒ€ã‚ªãƒ–ã‚¸ã‚§ã‚¯ãƒˆã®ä½œæˆ */
   vertShader = glCreateShader(GL_VERTEX_SHADER);
   fragShader = glCreateShader(GL_FRAGMENT_SHADER);
   
-  /* ƒVƒF[ƒ_‚Ìƒ\[ƒXƒvƒƒOƒ‰ƒ€‚Ì“Ç‚İ‚İ */
+  /* ã‚·ã‚§ãƒ¼ãƒ€ã®ã‚½ãƒ¼ã‚¹ãƒ—ãƒ­ã‚°ãƒ©ãƒ ã®èª­ã¿è¾¼ã¿ */
   if (readShaderSource(vertShader, "bump.vert")) exit(1);
   if (readShaderSource(fragShader, "bump.frag")) exit(1);
   
-  /* ƒo[ƒeƒbƒNƒXƒVƒF[ƒ_‚Ìƒ\[ƒXƒvƒƒOƒ‰ƒ€‚ÌƒRƒ“ƒpƒCƒ‹ */
+  /* ãƒãƒ¼ãƒ†ãƒƒã‚¯ã‚¹ã‚·ã‚§ãƒ¼ãƒ€ã®ã‚½ãƒ¼ã‚¹ãƒ—ãƒ­ã‚°ãƒ©ãƒ ã®ã‚³ãƒ³ãƒ‘ã‚¤ãƒ« */
   glCompileShader(vertShader);
   glGetShaderiv(vertShader, GL_COMPILE_STATUS, &compiled);
   printShaderInfoLog(vertShader);
@@ -143,7 +142,7 @@ static void init(void)
     exit(1);
   }
   
-  /* ƒtƒ‰ƒOƒƒ“ƒgƒVƒF[ƒ_‚Ìƒ\[ƒXƒvƒƒOƒ‰ƒ€‚ÌƒRƒ“ƒpƒCƒ‹ */
+  /* ãƒ•ãƒ©ã‚°ãƒ¡ãƒ³ãƒˆã‚·ã‚§ãƒ¼ãƒ€ã®ã‚½ãƒ¼ã‚¹ãƒ—ãƒ­ã‚°ãƒ©ãƒ ã®ã‚³ãƒ³ãƒ‘ã‚¤ãƒ« */
   glCompileShader(fragShader);
   glGetShaderiv(fragShader, GL_COMPILE_STATUS, &compiled);
   printShaderInfoLog(fragShader);
@@ -152,18 +151,18 @@ static void init(void)
     exit(1);
   }
   
-  /* ƒvƒƒOƒ‰ƒ€ƒIƒuƒWƒFƒNƒg‚Ìì¬ */
+  /* ãƒ—ãƒ­ã‚°ãƒ©ãƒ ã‚ªãƒ–ã‚¸ã‚§ã‚¯ãƒˆã®ä½œæˆ */
   gl2Program = glCreateProgram();
   
-  /* ƒVƒF[ƒ_ƒIƒuƒWƒFƒNƒg‚ÌƒVƒF[ƒ_ƒvƒƒOƒ‰ƒ€‚Ö‚Ì“o˜^ */
+  /* ã‚·ã‚§ãƒ¼ãƒ€ã‚ªãƒ–ã‚¸ã‚§ã‚¯ãƒˆã®ã‚·ã‚§ãƒ¼ãƒ€ãƒ—ãƒ­ã‚°ãƒ©ãƒ ã¸ã®ç™»éŒ² */
   glAttachShader(gl2Program, vertShader);
   glAttachShader(gl2Program, fragShader);
   
-  /* ƒVƒF[ƒ_ƒIƒuƒWƒFƒNƒg‚Ìíœ */
+  /* ã‚·ã‚§ãƒ¼ãƒ€ã‚ªãƒ–ã‚¸ã‚§ã‚¯ãƒˆã®å‰Šé™¤ */
   glDeleteShader(vertShader);
   glDeleteShader(fragShader);
   
-  /* ƒVƒF[ƒ_ƒvƒƒOƒ‰ƒ€‚ÌƒŠƒ“ƒN */
+  /* ã‚·ã‚§ãƒ¼ãƒ€ãƒ—ãƒ­ã‚°ãƒ©ãƒ ã®ãƒªãƒ³ã‚¯ */
   glLinkProgram(gl2Program);
   glGetProgramiv(gl2Program, GL_LINK_STATUS, &linked);
   printProgramInfoLog(gl2Program);
@@ -172,27 +171,27 @@ static void init(void)
     exit(1);
   }
   
-  /* ƒVƒF[ƒ_ƒvƒƒOƒ‰ƒ€‚Ì“K—p */
+  /* ã‚·ã‚§ãƒ¼ãƒ€ãƒ—ãƒ­ã‚°ãƒ©ãƒ ã®é©ç”¨ */
   glUseProgram(gl2Program);
 
-  /* ƒeƒNƒXƒ`ƒƒƒ†ƒjƒbƒg‚O‚ğw’è‚·‚é */
+  /* ãƒ†ã‚¯ã‚¹ãƒãƒ£ãƒ¦ãƒ‹ãƒƒãƒˆï¼ã‚’æŒ‡å®šã™ã‚‹ */
   glUniform1i(glGetUniformLocation(gl2Program, "texture"), 0);
   
-  /* ƒeƒNƒXƒ`ƒƒƒ†ƒjƒbƒg‚P‚ğw’è‚·‚é */
+  /* ãƒ†ã‚¯ã‚¹ãƒãƒ£ãƒ¦ãƒ‹ãƒƒãƒˆï¼‘ã‚’æŒ‡å®šã™ã‚‹ */
   glUniform1i(glGetUniformLocation(gl2Program, "dtexture"), 1);
   
-  /* ÚƒxƒNƒgƒ‹‚ğ“n‚·‚½‚ß‚Ég‚¤ attribute •Ï”‚Ìƒnƒ“ƒhƒ‹‚ğ“¾‚é */
+  /* æ¥ãƒ™ã‚¯ãƒˆãƒ«ã‚’æ¸¡ã™ãŸã‚ã«ä½¿ã† attribute å¤‰æ•°ã®ãƒãƒ³ãƒ‰ãƒ«ã‚’å¾—ã‚‹ */
   tangent = glGetAttribLocation(gl2Program, "tangent");
 }
 
-/* ƒgƒ‰ƒbƒNƒ{[ƒ‹ˆ——pŠÖ”‚ÌéŒ¾ */
+/* ãƒˆãƒ©ãƒƒã‚¯ãƒœãƒ¼ãƒ«å‡¦ç†ç”¨é–¢æ•°ã®å®£è¨€ */
 #include "trackball.h"
 
-/* ‹…‚ğ•`‚­ŠÖ”‚ÌéŒ¾ */
+/* çƒã‚’æãé–¢æ•°ã®å®£è¨€ */
 #include "sphere.h"
 
 /*
-** ƒV[ƒ“‚Ì•`‰æ
+** ã‚·ãƒ¼ãƒ³ã®æç”»
 */
 static void scene(void)
 {
@@ -200,78 +199,78 @@ static void scene(void)
   static const GLfloat diffuse[] = { 0.6, 0.1, 0.1, 1.0 };
   static const GLfloat specular[] = { 0.3, 0.3, 0.3, 1.0 };
   
-  /* Ş¿‚Ìİ’è */
+  /* æè³ªã®è¨­å®š */
   glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE, diffuse);
   glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, specular);
   glMaterialf(GL_FRONT_AND_BACK, GL_SHININESS, 100.0f);
   
-  /* –@üƒ}ƒbƒv‚Ìƒ}ƒbƒsƒ“ƒOŠJn */
+  /* æ³•ç·šãƒãƒƒãƒ—ã®ãƒãƒƒãƒ”ãƒ³ã‚°é–‹å§‹ */
   glEnable(GL_TEXTURE_2D);
   
-  /* ƒfƒBƒtƒ…[ƒYƒ}ƒbƒv‚Ìƒ}ƒbƒsƒ“ƒOŠJn */
+  /* ãƒ‡ã‚£ãƒ•ãƒ¥ãƒ¼ã‚ºãƒãƒƒãƒ—ã®ãƒãƒƒãƒ”ãƒ³ã‚°é–‹å§‹ */
   glActiveTexture(GL_TEXTURE1);
   glEnable(GL_TEXTURE_2D);
 
-  /* ƒgƒ‰ƒbƒNƒ{[ƒ‹ˆ—‚É‚æ‚é‰ñ“] */
+  /* ãƒˆãƒ©ãƒƒã‚¯ãƒœãƒ¼ãƒ«å‡¦ç†ã«ã‚ˆã‚‹å›è»¢ */
   glMultMatrixd(trackballRotation());
   
-  /* ‹…‚ğ•`‚­ */
+  /* çƒã‚’æã */
   sphere(1.0, 64, 32);
   
-  /* ƒfƒBƒtƒ…[ƒYƒ}ƒbƒv‚Ìƒ}ƒbƒsƒ“ƒOI—¹ */
+  /* ãƒ‡ã‚£ãƒ•ãƒ¥ãƒ¼ã‚ºãƒãƒƒãƒ—ã®ãƒãƒƒãƒ”ãƒ³ã‚°çµ‚äº† */
   glEnable(GL_TEXTURE_2D);
   glActiveTexture(GL_TEXTURE0);
 
-  /* –@üƒ}ƒbƒv‚Ìƒ}ƒbƒsƒ“ƒOI—¹ */
+  /* æ³•ç·šãƒãƒƒãƒ—ã®ãƒãƒƒãƒ”ãƒ³ã‚°çµ‚äº† */
   glDisable(GL_TEXTURE_2D);
 }
 
 
 /****************************
-** GLUT ‚ÌƒR[ƒ‹ƒoƒbƒNŠÖ” **
+** GLUT ã®ã‚³ãƒ¼ãƒ«ãƒãƒƒã‚¯é–¢æ•° **
 ****************************/
 
 static void display(void)
 {
-  /* ƒ‚ƒfƒ‹ƒrƒ…[•ÏŠ·s—ñ‚Ìİ’è */
+  /* ãƒ¢ãƒ‡ãƒ«ãƒ“ãƒ¥ãƒ¼å¤‰æ›è¡Œåˆ—ã®è¨­å®š */
   glMatrixMode(GL_MODELVIEW);
   glLoadIdentity();
   
-  /* ŒõŒ¹‚ÌˆÊ’u‚ğİ’è */
+  /* å…‰æºã®ä½ç½®ã‚’è¨­å®š */
   glLightfv(GL_LIGHT0, GL_POSITION, lightpos);
   
-  /* ‹“_‚ÌˆÚ“®i•¨‘Ì‚Ì•û‚ğ‰œ‚ÉˆÚ“®j*/
+  /* è¦–ç‚¹ã®ç§»å‹•ï¼ˆç‰©ä½“ã®æ–¹ã‚’å¥¥ã«ç§»å‹•ï¼‰*/
   glTranslated(0.0, 0.0, -5.0);
   
-  /* ‰æ–ÊƒNƒŠƒA */
+  /* ç”»é¢ã‚¯ãƒªã‚¢ */
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
   
-  /* ƒV[ƒ“‚Ì•`‰æ */
+  /* ã‚·ãƒ¼ãƒ³ã®æç”» */
   scene();
   
-  /* ƒ_ƒuƒ‹ƒoƒbƒtƒ@ƒŠƒ“ƒO */
+  /* ãƒ€ãƒ–ãƒ«ãƒãƒƒãƒ•ã‚¡ãƒªãƒ³ã‚° */
   glutSwapBuffers();
 }
 
 static void resize(int w, int h)
 {
-  /* ƒgƒ‰ƒbƒNƒ{[ƒ‹‚·‚é”ÍˆÍ */
+  /* ãƒˆãƒ©ãƒƒã‚¯ãƒœãƒ¼ãƒ«ã™ã‚‹ç¯„å›² */
   trackballRegion(w, h);
   
-  /* ƒEƒBƒ“ƒhƒE‘S‘Ì‚ğƒrƒ…[ƒ|[ƒg‚É‚·‚é */
+  /* ã‚¦ã‚£ãƒ³ãƒ‰ã‚¦å…¨ä½“ã‚’ãƒ“ãƒ¥ãƒ¼ãƒãƒ¼ãƒˆã«ã™ã‚‹ */
   glViewport(0, 0, w, h);
   
-  /* “§‹•ÏŠ·s—ñ‚Ìw’è */
+  /* é€è¦–å¤‰æ›è¡Œåˆ—ã®æŒ‡å®š */
   glMatrixMode(GL_PROJECTION);
   
-  /* “§‹•ÏŠ·s—ñ‚Ì‰Šú‰» */
+  /* é€è¦–å¤‰æ›è¡Œåˆ—ã®åˆæœŸåŒ– */
   glLoadIdentity();
   gluPerspective(40.0, (double)w / (double)h, 1.0, 100.0);
 }
 
 static void idle(void)
 {
-  /* ‰æ–Ê‚Ì•`‚«‘Ö‚¦ */
+  /* ç”»é¢ã®æãæ›¿ãˆ */
   glutPostRedisplay();
 }
 
@@ -281,12 +280,12 @@ static void mouse(int button, int state, int x, int y)
   case GLUT_LEFT_BUTTON:
     switch (state) {
     case GLUT_DOWN:
-      /* ƒgƒ‰ƒbƒNƒ{[ƒ‹ŠJn */
+      /* ãƒˆãƒ©ãƒƒã‚¯ãƒœãƒ¼ãƒ«é–‹å§‹ */
       trackballStart(x, y);
       glutIdleFunc(idle);
       break;
     case GLUT_UP:
-      /* ƒgƒ‰ƒbƒNƒ{[ƒ‹’â~ */
+      /* ãƒˆãƒ©ãƒƒã‚¯ãƒœãƒ¼ãƒ«åœæ­¢ */
       trackballStop(x, y);
       glutIdleFunc(0);
       break;
@@ -301,7 +300,7 @@ static void mouse(int button, int state, int x, int y)
 
 static void motion(int x, int y)
 {
-  /* ƒgƒ‰ƒbƒNƒ{[ƒ‹ˆÚ“® */
+  /* ãƒˆãƒ©ãƒƒã‚¯ãƒœãƒ¼ãƒ«ç§»å‹• */
   trackballMotion(x, y);
 }
 
@@ -311,7 +310,7 @@ static void keyboard(unsigned char key, int x, int y)
   case 'q':
   case 'Q':
   case '\033':
-    /* ESC ‚© q ‚© Q ‚ğƒ^ƒCƒv‚µ‚½‚çI—¹ */
+    /* ESC ã‹ q ã‹ Q ã‚’ã‚¿ã‚¤ãƒ—ã—ãŸã‚‰çµ‚äº† */
     exit(0);
   default:
     break;
@@ -319,7 +318,7 @@ static void keyboard(unsigned char key, int x, int y)
 }
 
 /*
-** ƒƒCƒ“ƒvƒƒOƒ‰ƒ€
+** ãƒ¡ã‚¤ãƒ³ãƒ—ãƒ­ã‚°ãƒ©ãƒ 
 */
 int main(int argc, char *argv[])
 {

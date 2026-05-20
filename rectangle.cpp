@@ -1,4 +1,4 @@
-#if defined(WIN32)
+ï»¿#if defined(WIN32)
 #  include "glut.h"
 #  include "glext.h"
 extern PFNGLMULTITEXCOORD3DPROC glMultiTexCoord3d;
@@ -13,11 +13,11 @@ extern PFNGLMULTITEXCOORD3DPROC glMultiTexCoord3d;
 #include "glsl.h"
 
 /*
-** ‹éŒ`‚Ì•`‰æ
+** çŸ©å½¢ã®æç”»
 */
 void rectangle(double w, double h)
 {
-  /* ’¸“_‚ÌÀ•W’l */
+  /* é ‚ç‚¹ã®åº§æ¨™å€¤ */
   const GLdouble vertex[4][3] = {
     { -w, -h, 0.0 },
     {  w, -h, 0.0 },
@@ -26,20 +26,20 @@ void rectangle(double w, double h)
   };
   extern GLint tangent;
   
-  /* ’¸“_‚ÌƒeƒNƒXƒ`ƒƒÀ•W */
+  /* é ‚ç‚¹ã®ãƒ†ã‚¯ã‚¹ãƒãƒ£åº§æ¨™ */
   static const GLdouble texcoord[4][2] = {
     { 0.0, 0.0 }, { 1.0, 0.0 }, { 1.0, 1.0 }, { 0.0, 1.0 }
   };
 
-  /* ‹éŒ`‚ğ•`‚­ */
+  /* çŸ©å½¢ã‚’æã */
   glBegin(GL_QUADS);
   
   glVertexAttrib3d(tangent, 1.0, 0.0, 0.0);
   for (int i = 0; i < 4; ++i) {
-    /* –@üƒ}ƒbƒv‚ÌƒeƒNƒXƒ`ƒƒÀ•W‚ğİ’è‚·‚é */
+    /* æ³•ç·šãƒãƒƒãƒ—ã®ãƒ†ã‚¯ã‚¹ãƒãƒ£åº§æ¨™ã‚’è¨­å®šã™ã‚‹ */
     glTexCoord2dv(texcoord[i]);
     
-    /* ‘Î‰‚·‚é’¸“_À•W‚Ìw’è */
+    /* å¯¾å¿œã™ã‚‹é ‚ç‚¹åº§æ¨™ã®æŒ‡å®š */
     glVertex3dv(vertex[i]);
   }
   glEnd();

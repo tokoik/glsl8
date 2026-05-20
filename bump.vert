@@ -7,30 +7,30 @@ varying vec3 view;
 
 void main()
 {
-  // ‹üƒxƒNƒgƒ‹‚ÆŒõüƒxƒNƒgƒ‹‚ğ‹‚ß‚é
+  // è¦–ç·šãƒ™ã‚¯ãƒˆãƒ«ã¨å…‰ç·šãƒ™ã‚¯ãƒˆãƒ«ã‚’æ±‚ã‚ã‚‹
   vec3 v = vec3(gl_ModelViewMatrix * gl_Vertex);
   vec3 l = gl_LightSource[0].position.xyz - v;
   
-  // –@üƒxƒNƒgƒ‹‚ÆÚüƒxƒNƒgƒ‹‚©‚çÚ‹óŠÔ‚Ö‚Ì•ÏŠ·s—ñ‚ğ‹‚ß‚é
+  // æ³•ç·šãƒ™ã‚¯ãƒˆãƒ«ã¨æ¥ç·šãƒ™ã‚¯ãƒˆãƒ«ã‹ã‚‰æ¥ç©ºé–“ã¸ã®å¤‰æ›è¡Œåˆ—ã‚’æ±‚ã‚ã‚‹
   vec3 n = normalize(gl_NormalMatrix * gl_Normal);
   vec3 t = normalize(gl_NormalMatrix * tangent);
   vec3 b = cross(n, t);
   
   vec3 temp;
   
-  // Ú‹óŠÔ‚É‚¨‚¯‚é‹üƒxƒNƒgƒ‹‚ğ‹‚ß‚é
+  // æ¥ç©ºé–“ã«ãŠã‘ã‚‹è¦–ç·šãƒ™ã‚¯ãƒˆãƒ«ã‚’æ±‚ã‚ã‚‹
   temp.x = dot(v, t);
   temp.y = dot(v, b);
   temp.z = dot(v, n);
   view = normalize(temp);
 
-  // Ú‹óŠÔ‚É‚¨‚¯‚éŒõüƒxƒNƒgƒ‹‚ğ‹‚ß‚é
+  // æ¥ç©ºé–“ã«ãŠã‘ã‚‹å…‰ç·šãƒ™ã‚¯ãƒˆãƒ«ã‚’æ±‚ã‚ã‚‹
   temp.x = dot(l, t);
   temp.y = dot(l, b);
   temp.z = dot(l, n);
   light = normalize(temp);
 
-  // ƒeƒNƒXƒ`ƒƒÀ•W‚Æ’¸“_À•W‚ğo—Í‚·‚é
+  // ãƒ†ã‚¯ã‚¹ãƒãƒ£åº§æ¨™ã¨é ‚ç‚¹åº§æ¨™ã‚’å‡ºåŠ›ã™ã‚‹
   gl_TexCoord[0] = gl_MultiTexCoord0;
   gl_Position = ftransform();
 }
