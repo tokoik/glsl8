@@ -1,29 +1,26 @@
-/*
-** �ȈՃg���b�N�{�[������
+﻿/*
+** 簡易トラックボール処理
 */
+#if defined(_MSC_VER)
+#  define _USE_MATH_DEFINES
+#  define _CRT_SECURE_NO_WARNINGS
+#endif
 #include <math.h>
 #include "trackball.h"
 
-#ifndef M_PI
-#  define M_PI 3.14159265358979323846
-#endif
-
-/* �h���b�O�J�n�ʒu */
+/* ドラッグ開始位置 */
 static int cx, cy;
 
-/* �}�E�X�̐�Έʒu���E�B���h�E���ł̑��Έʒu�̊��Z�W�� */
+/* マウスの絶対位置→ウィンドウ内での相対位置の換算係数 */
 static double sx, sy;
 
-/* �}�E�X�̑��Έʒu����]�p�̊��Z�W�� */
-#define SCALE (2.0 * M_PI)
-
-/* ��]�̏����l (�N�H�[�^�j�I��) */
+/* 回転の初期値 (クォータニオン) */
 static double cq[4] = { 1.0, 0.0, 0.0, 0.0 };
 
-/* �h���b�O���̉�] (�N�H�[�^�j�I��) */
+/* ドラッグ中の回転 (クォータニオン) */
 static double tq[4];
 
-/* ��]�̕ϊ��s�� */
+/* 回転の変換行列 */
 static double rt[16] = {
   1.0, 0.0, 0.0, 0.0,
   0.0, 1.0, 0.0, 0.0,
@@ -31,7 +28,7 @@ static double rt[16] = {
   0.0, 0.0, 0.0, 1.0,
 };
 
-/* �h���b�O�����ۂ� */
+/* ドラッグ中か否か */
 static int drag = 0;
 
 /*
@@ -46,9 +43,9 @@ static void qmul(double r[], const double p[], const double q[])
 }
 
 /*
-** ��]�ϊ��s�� r <- �N�H�[�^�j�I�� q
+** 回転変換行列 r <- クォータニオン q
 */
-static void qrot(double r[], double q[])
+static void qrot(double r[], const double q[])
 {
   double x2 = q[1] * q[1] * 2.0;
   double y2 = q[2] * q[2] * 2.0;
@@ -59,7 +56,7 @@ static void qrot(double r[], double q[])
   double xw = q[1] * q[0] * 2.0;
   double yw = q[2] * q[0] * 2.0;
   double zw = q[3] * q[0] * 2.0;
-  
+
   r[ 0] = 1.0 - y2 - z2;
   r[ 1] = xy + zw;
   r[ 2] = zx - yw;
@@ -74,103 +71,121 @@ static void qrot(double r[], double q[])
 }
 
 /*
-** �g���b�N�{�[�������̏�����
-** �@�@�v���O�����̏����������̂Ƃ���Ŏ��s����
+** クォータニオン q の正規化
 */
-void trackballInit(void)
+static void qnormalize(double q[])
 {
-  /* �h���b�O���ł͂Ȃ� */
+  double l = q[0] * q[0] + q[1] * q[1] + q[2] * q[2] + q[3] * q[3];
+
+  if (l > 0) {
+    q[0] /= l;
+    q[1] /= l;
+    q[2] /= l;
+    q[3] /= l;
+  }
+}
+
+/*
+** トラックボール処理の初期化
+** 　　プログラムの初期化処理のところで実行する
+*/
+void trackballInit()
+{
+  /* ドラッグ中ではない */
   drag = 0;
 
-  /* �P�ʃN�H�[�^�[�j�I�� */
+  /* 単位クォーターニオン */
   cq[0] = 1.0;
   cq[1] = 0.0;
   cq[2] = 0.0;
   cq[3] = 0.0;
-  
-  /* ��]�s��̏����� */
+
+  /* 回転行列の初期化 */
   qrot(rt, cq);
 }
 
 /*
-** �g���b�N�{�[������̈�
-** �@�@Reshape �R�[���o�b�N (resize) �̒��Ŏ��s����
+** トラックボールする領域
+** 　　Reshape コールバック (resize) の中で実行する
 */
 void trackballRegion(int w, int h)
 {
-  /* �}�E�X�|�C���^�ʒu�̃E�B���h�E���̑��ΓI�ʒu�ւ̊��Z�p */
+  /* マウスポインタ位置のウィンドウ内の相対的位置への換算用 */
   sx = 1.0 / (double)w;
   sy = 1.0 / (double)h;
 }
 
 /*
-** �h���b�O�J�n
-** �@�@�}�E�X�{�^�����������Ƃ��Ɏ��s����
+** ドラッグ開始
+** 　　マウスボタンを押したときに実行する
 */
 void trackballStart(int x, int y)
 {
-  /* �h���b�O�J�n */
+  /* ドラッグ開始 */
   drag = 1;
 
-  /* �h���b�O�J�n�_���L�^ */
+  /* ドラッグ開始点を記録 */
   cx = x;
   cy = y;
 }
 
 /*
-** �h���b�O��
-** �@�@�}�E�X�̃h���b�O���Ɏ��s����
+** ドラッグ中
+** 　　マウスのドラッグ中に実行する
 */
 void trackballMotion(int x, int y)
 {
   if (drag) {
     double dx, dy, a;
-    
-    /* �}�E�X�|�C���^�̈ʒu�̃h���b�O�J�n�ʒu����̕ψ� */
+
+    /* マウスポインタの位置のドラッグ開始位置からの変位 */
     dx = (x - cx) * sx;
     dy = (y - cy) * sy;
-    
-    /* �}�E�X�|�C���^�̈ʒu�̃h���b�O�J�n�ʒu����̋��� */
+
+    /* マウスポインタの位置のドラッグ開始位置からの距離 */
     a = sqrt(dx * dx + dy * dy);
-    
+
     if (a != 0.0) {
-      double ar = a * SCALE * 0.5;
+      double ar = a * M_PI;
       double as = sin(ar) / a;
       double dq[4] = { cos(ar), dy * as, dx * as, 0.0 };
-      
-      /* �N�H�[�^�j�I�����|���ĉ�]������ */
+
+      /* クォータニオンを掛けて回転を合成 */
       qmul(tq, dq, cq);
-      
-      /* �N�H�[�^�j�I�������]�̕ϊ��s������߂� */
+
+      /* クォータニオンを正規化 */
+      qnormalize(tq);
+
+      /* クォータニオンから回転の変換行列を求める */
       qrot(rt, tq);
     }
   }
 }
 
 /*
-** ��~
-** �@�@�}�E�X�{�^���𗣂����Ƃ��Ɏ��s����
+** 停止
+** 　　マウスボタンを離したときに実行する
 */
 void trackballStop(int x, int y)
 {
-  /* �h���b�O�I���_�ɂ������]�����߂� */
+  /* ドラッグ終了点における回転を求める */
   trackballMotion(x, y);
 
-  /* ��]�̕ۑ� */
+  /* 回転の保存 */
   cq[0] = tq[0];
   cq[1] = tq[1];
   cq[2] = tq[2];
   cq[3] = tq[3];
 
-  /* �h���b�O�I�� */
+  /* ドラッグ終了 */
   drag = 0;
 }
 
 /*
-** ��]�̕ϊ��s���߂�
-** �@�@�߂�l�� glMultMatrixd() �ȂǂŎg�p���ăI�u�W�F�N�g����]����
+** 回転の変換行列を戻す
+** 　　戻り値を glMultMatrixd() などで使用してオブジェクトを回転する
 */
-double *trackballRotation(void)
+double *trackballRotation()
 {
   return rt;
 }
