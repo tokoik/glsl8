@@ -6,7 +6,7 @@ uniform sampler2D dtexture;
 varying vec3 light;
 varying vec3 view;
 
-void main (void)
+void main ()
 {
   vec4 color = texture2DProj(texture, gl_TexCoord[0]);
   vec3 fview = normalize(view);
