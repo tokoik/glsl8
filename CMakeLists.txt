@@ -9,7 +9,6 @@ set(SOURCES
     main.cpp
     glsl.cpp
     normalmap.cpp
-    rectangle.cpp
     sphere.cpp
     trackball.cpp
 )
@@ -18,7 +17,6 @@ set(SOURCES
 set(HEADERS
     glsl.h
     normalmap.h
-    rectangle.h
     sphere.h
     trackball.h
 )

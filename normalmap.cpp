@@ -1,21 +1,31 @@
-﻿#include <stdio.h>
-#include <stdlib.h>
-#include <math.h>
-#if defined(WIN32)
-#  include "glut.h"
-#elif defined(__APPLE__) || defined(MACOSX)
+﻿/*
+** 法線マップの作成
+*/
+#include "normalmap.h"
+
+/* OpenGL */
+#if defined(__APPLE__)
+#  define GL_SILENCE_DEPRECATION
 #  include <GLUT/glut.h>
 #else
+#  if defined(_MSC_VER)
+#    define _USE_MATH_DEFINES
+#    define _CRT_SECURE_NO_WARNINGS
+#  endif
 #  include <GL/glut.h>
 #endif
 
-#include "normalmap.h"
+/* 標準ライブラリ */
+#include <stdio.h>
+#include <stdlib.h>
+#include <math.h>
 
 /*
 ** 高さマップをもとに法線マップを作成する
 */
-void makeNormalMap(GLubyte *tex, int width, int height, double nz, const char *name)
+void makeNormalMap(void *data, int width, int height, double nz, const char *name)
 {
+  GLubyte *tex = (GLubyte *)data;
   FILE *fp = fopen(name, "rb");
   
   if (fp) {
@@ -39,11 +49,17 @@ void makeNormalMap(GLubyte *tex, int width, int height, double nz, const char *n
           *(tex++) = (GLubyte)(nx * 127.5 / nl + 127.5);
           *(tex++) = (GLubyte)(ny * 127.5 / nl + 127.5);
           *(tex++) = (GLubyte)(nz * 127.5 / nl + 127.5);
-          *(tex++) = map[y + x];
+          *(tex++) = 255;
         }
       }
       
       free(map);
     }
+    else {
+      fprintf(stderr, "Can't allocate memory\n");
+    }
+  }
+  else {
+    fprintf(stderr, "Can't open file: %s\n", name);
   }
 }
