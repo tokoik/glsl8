@@ -27,17 +27,17 @@ void makeNormalMap(void *data, int width, int height, double nz, const char *nam
 {
   GLubyte *tex = (GLubyte *)data;
   FILE *fp = fopen(name, "rb");
-  
+
   if (fp) {
     unsigned char *map = (unsigned char *)malloc(width * height);
-    
+
     if (map) {
       unsigned long size = width * height;
-      
+
       /* 高さマップを読み込む */
       fread(map, height, width, fp);
       fclose(fp);
-      
+
       for (unsigned long y = 0; y < size; y += width) {
         for (int x = 0; x < width; ++x) {
           /* 隣接する画素との値の差を法線ベクトルの成分に用いる */
@@ -45,7 +45,7 @@ void makeNormalMap(void *data, int width, int height, double nz, const char *nam
           double ny = map[y + x] - map[(y + width) % size + x];
           /* 法線ベクトルの長さを求めておく */
           double nl = sqrt(nx * nx + ny * ny + nz * nz);
-          
+
           *(tex++) = (GLubyte)(nx * 127.5 / nl + 127.5);
           *(tex++) = (GLubyte)(ny * 127.5 / nl + 127.5);
           *(tex++) = (GLubyte)(nz * 127.5 / nl + 127.5);
@@ -53,7 +53,7 @@ void makeNormalMap(void *data, int width, int height, double nz, const char *nam
           *(tex++) = map[y + x];
         }
       }
-      
+
       free(map);
     }
     else {
