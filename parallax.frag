@@ -29,7 +29,7 @@ void main ()
   vec3 normal = vec3(texture2D(color, texcoord)) * 2.0 - 1.0;
 
   // ずらしたテクスチャ座標を使って拡散反射色を取り出す
-  vec4 dcolor = texture2D(dcolor, texcoord);
+  vec4 ecolor = texture2D(dcolor, texcoord);
 
   // 接空間における光線ベクトル
   vec3 light = normalize(tlight);
@@ -45,7 +45,7 @@ void main ()
     gl_FrontMaterial.shininess);
 
   // フラグメントの色
-  gl_FragColor = gl_FrontLightProduct[0].ambient * dcolor
-               + gl_FrontLightProduct[0].diffuse * diffuse * dcolor
+  gl_FragColor = gl_FrontLightProduct[0].ambient * ecolor
+               + gl_FrontLightProduct[0].diffuse * diffuse * ecolor
                + gl_FrontLightProduct[0].specular * specular;
 }
