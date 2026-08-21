@@ -25,6 +25,8 @@ set(HEADERS
 set(SHADER_FILES
     bump.vert
     bump.frag
+    parallax.vert
+    parallax.frag
 )
 
 # リソースファイル
@@ -69,7 +71,7 @@ if(APPLE)
         XCODE_GENERATE_SCHEME ON
     )
 
-    # リソースの配置設定
+    # リソースファイルなどをアプリケーションバンドル内の Resources に組み込む
     set_source_files_properties(${SHADER_FILES} PROPERTIES MACOSX_PACKAGE_LOCATION Resources)
     set_source_files_properties(${RESOURCE_FILES} PROPERTIES MACOSX_PACKAGE_LOCATION Resources)
     set_source_files_properties(${ICON_FILE} PROPERTIES MACOSX_PACKAGE_LOCATION Resources)
