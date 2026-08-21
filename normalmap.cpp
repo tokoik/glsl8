@@ -49,7 +49,8 @@ void makeNormalMap(void *data, int width, int height, double nz, const char *nam
           *(tex++) = (GLubyte)(nx * 127.5 / nl + 127.5);
           *(tex++) = (GLubyte)(ny * 127.5 / nl + 127.5);
           *(tex++) = (GLubyte)(nz * 127.5 / nl + 127.5);
-          *(tex++) = 255;
+          /* アルファチャンネルに高さマップを埋め込む */
+          *(tex++) = map[y + x];
         }
       }
       

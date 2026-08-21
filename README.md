@@ -2,9 +2,9 @@
 
 ## 1. 概要
 
-このプログラムは、OpenGL と GLSL (OpenGL Shading Language) を用いて「視差マッピング (Parallax Mapping)」を実装するための、学生向けのサンプルプログラムです。本プログラムは、以下のブログ記事の解説に沿って学習を進めるための雛形として提供されています。
+このプログラムは、OpenGL と GLSL (OpenGL Shading Language) を用いて「視差マッピング (Parallax Mapping)」を実装するための、学生向けのサンプルプログラムです。本プログラムは、以下のブログ記事の解説に沿って作成したものです。
 
-- [第８回 視差マッピング](https://tokoik.github.io/blog/opengl/2006/05/25/glsl.html)
+- [第８回 視差マッピング](https://tokoik.github.io/blog/glsl%20%E5%85%A5%E9%96%80/2006/05/25/glsl.html)
 
 従来のバンプマッピングでは陰影の変化のみで凹凸を表現していたため、斜めから見たときに凹凸のずれ（視差）が生じないという問題がありました。このプログラムでは、法線マップのアルファチャンネルに格納された高さ情報と視線方向ベクトルを用いてサンプリングするテクスチャ座標をずらすことで、斜めから見たときにもリアルな凹凸の立体感（視差効果）を再現します。
 
@@ -69,23 +69,54 @@
 
 ## 4. 解説
 
-### 4.1 ディフューズテクスチャと法線マップのマルチテクスチャ
+このプログラムは、[第４回 GLSL によるバンプマッピング](https://github.com/tokoik/glsl4) のプログラムをもとに、シェーダのソースファイルを parallax.vert と parallax.frag に置き換えたものです。バーテックスシェーダ (parallax.vert) の内容は第４回の bump.vert と同じで、接空間における光線ベクトル `tlight` と視線ベクトル `tview` をフラグメントシェーダに送ります。
 
-- テクスチャユニット0: 高さ情報がアルファチャンネルに入った法線マップ (`dotbump.raw`)
-- テクスチャユニット1: ディフューズテクスチャ (`dot.raw`)
+### 4.1 法線マップへの高さマップの埋め込み (normalmap.cpp)
 
-### 4.2 視差マッピングの計算 (bump.frag)
+視差マッピングでは、フラグメントシェーダの中で高さマップを参照します。テクスチャユニットを節約するために、法線マップの空いているアルファチャンネルに高さマップの値をそのまま格納しています。
 
-フラグメントシェーダ内で視線方向単位ベクトル `fview` を求め、テクスチャ座標をずらします。
+```cpp
+*(tex++) = (GLubyte)(nx * 127.5 / nl + 127.5);
+*(tex++) = (GLubyte)(ny * 127.5 / nl + 127.5);
+*(tex++) = (GLubyte)(nz * 127.5 / nl + 127.5);
+/* アルファチャンネルに高さマップを埋め込む */
+*(tex++) = map[y + x];
+```
+
+### 4.2 ディフューズテクスチャと法線マップのマルチテクスチャ (main.cpp)
+
+- テクスチャユニット0: 高さ情報がアルファチャンネルに入った法線マップ（高さマップ `dotbump.raw` から `makeNormalMap()` で生成）… サンプラ `color`
+- テクスチャユニット1: ディフューズテクスチャ (`dot.raw`) … サンプラ `dcolor`
+
+`init()` でそれぞれの uniform 変数の場所を `colorLoc`、`dcolorLoc` に取得し、`display()` で `glUniform1i()` を使ってテクスチャユニット番号を設定します。
+
+```cpp
+/* テクスチャのサンプラにテクスチャユニットを指定する */
+glUniform1i(colorLoc, 0);
+glUniform1i(dcolorLoc, 1);
+```
+
+### 4.3 視差マッピングの計算 (parallax.frag)
+
+フラグメントシェーダ内で接空間における視線方向単位ベクトル `view` を求め、それと高さマップの値からテクスチャ座標をずらします。
 
 ```glsl
-vec4 color = texture2DProj(texture, gl_TexCoord[0]);
-vec3 fview = normalize(view);
+// テクスチャから画素の色を得る
+vec4 fcolor = texture2DProj(color, gl_TexCoord[0]);
 
-// 視線方向の xy 成分と高さ情報 (color.a) からずらしたテクスチャ座標を算出
-vec2 texcoord = gl_TexCoord[0].xy - fview.xy * color.a * 0.02;
+// 接空間における視線ベクトル
+vec3 view = normalize(tview);
 
-// ずらしたテクスチャ座標で法線マップとディフューズテクスチャをサンプリング
-vec3 fnormal = vec3(texture2D(texture, texcoord)) * 2.0 - 1.0;
-vec4 dcolor = texture2D(dtexture, texcoord);
+// 高さマップを使ってテクスチャ座標を接空間の視線ベクトル方向にずらす
+vec2 texcoord = gl_TexCoord[0].xy - view.xy * fcolor.a * 0.02;
+
+// ずらしたテクスチャ座標を使って法線マップを取り出して法線ベクトルを求める
+vec3 normal = vec3(texture2D(color, texcoord)) * 2.0 - 1.0;
+
+// ずらしたテクスチャ座標を使って拡散反射色を取り出す
+vec4 dcolor = texture2D(dcolor, texcoord);
 ```
+
+係数 `0.02` は凹凸の高さの最大値に相当します。大きくするほど凹凸が強く見えますが、バンプ内での隠面消去を行っていないため、大きすぎると不自然な表示になります。
+
+このあとは第４回と同様に、接空間で拡散反射率 `diffuse` と鏡面反射率 `specular` を求め、拡散反射光成分と環境光成分にディフューズテクスチャの色 `dcolor` を乗じてフラグメントの色を決定します。

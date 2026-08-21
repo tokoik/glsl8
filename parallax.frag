@@ -1,6 +1,6 @@
 #version 120
 
-// bump.frag
+// parallax.frag
 
 // ラスタライザから受け取る接空間の光線ベクトルの補間値
 varying vec3 tlight;

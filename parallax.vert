@@ -1,6 +1,6 @@
 #version 120
 
-// bump.vert
+// parallax.vert
 
 // 頂点の接線ベクトル
 attribute vec3 tangent;
